@@ -1,0 +1,57 @@
+---
+title: "Summarizing Data"
+output: html_document
+---
+```{r}
+if(!file.exists("./data/data.csv")){source(getData.R)}
+```
+
+The dplyr and tidyr packages have numerous functions (sometimes referred to as “verbs”) for cleaning up data. We’ll start with the functions to summarize data.
+
+The primary of these is summarize, which inputs a data frame and creates a new data frame with the requested summaries. In conjunction with summarize, you can use other functions from dplyr (e.g.,n, which counts the number of observations in a given column) to create this summary. You can also use R functions from other packages or base R functions to create the summary.
+
+For example, say we want a summary of the number of observations in the ext_tracks hurricane dataset, as well as the highest measured maximum windspeed (given by the column max_wind in the dataset) in any of the storms, and the lowest minimum pressure (min_pressure). To create this summary, you can run:
+```{r warning=FALSE, message=FALSE}
+library(dplyr)
+ext_tracks <- read.csv("./data/data.csv")
+ext_tracks %>%
+  summarize(n_obs = n(), worst_wind = max(max_wind), worst_pressure = min(min_pressure))
+```
+This summary provides particularly useful information for this example data, because it gives an unrealistic value for minimum pressure (0 hPa). This shows that this dataset will need some cleaning. The highest wind speed observed for any of the storms, 160 knots, is more reasonable.
+
+You can also use summarize with functions you’ve written yourself, which gives you a lot of power in summarizing data in interesting ways. As a simple example, if you wanted to present the maximum wind speed in the summary above using miles per hour rather than knots, you could write a function to perform the conversion, and then use that function within the summarize call:
+```{r}
+knots_to_mph <- function(knots){mph <- 1.152 * knots}
+
+ext_tracks %>% summarize(n_obs = n(), worst_wind = knots_to_mph(max(max_wind)), worst_pressure = min(min_pressure))
+```
+So far, we’ve only used summarize to create a single-line summary of the data frame. In other words, the summary functions are applied across the entire dataset, to return a single value for each summary statistic. However, often you might want summaries stratified by a certain grouping characteristic of the data. For the hurricane data, for example, you might want to get the worst wind and worst pressure by storm, rather than across all storms.
+
+You can do this by grouping your data frame by one of its column variables, using the functiongroup_by, and then using summarize. The group_by function does not make a visible change to a data frame, although you can see, if you print out a grouped data frame, that the new grouping variable will be listed under “Groups” at the top of a print-out:
+```{r}
+ext_tracks %>% group_by(storm_name, year) %>% head()
+```
+As a note, since hurricane storm names repeat at regular intervals until they are retired, to get a separate summary for each unique storm, this example requires grouping by both storm_name and year.
+
+Even though applying the group_by function does not cause a noticeable change to the data frame itself, you’ll notice the difference in grouped and ungrouped data frames when you use summarize on the data frame. If a data frame is grouped, all summaries are calculated and given separately for each unique value of the grouping variable:
+```{r}
+ext_tracks %>%
+  group_by(storm_name, year) %>% summarize(n_obs = n(), worst_wind = max(max_wind), worst_pressure = min(min_pressure))
+```
+This grouping / summarizing combination can be very useful for quickly plotting interesting summaries of a dataset. For example, to plot a histogram of maximum wind speed observed for each storm (Figure 1.1), you could run:
+```{r warning=FALSE, message=FALSE}
+library(ggplot2)
+ext_tracks %>%
+  group_by(storm_name) %>%
+  summarize(worst_wind = max(max_wind)) %>%
+  ggplot(aes(x = worst_wind)) + geom_histogram() 
+```
+
+Figure 1.1: Histogram of the maximum wind speed observed during a storm for all Atlantic basin tropical storms, 1988–2015.
+
+We will show a few basic examples of plotting using ggplot2 functions in this chapter of the book. We will cover plotting much more thoroughly in a later section of the specialization.
+
+From Figure 1.1, we can see that only two storms had maximum wind speeds at or above 160 knots (we’ll check this later with some other dplyr functions).
+
+You cannot make changes to a variable that is being used to group a dataframe. If you try, you will get the error Error: cannot modify grouping variable. If you get this error, use the ungroup function to remove grouping within a data frame, and then you will be able to mutate any of the variables in the data.
+

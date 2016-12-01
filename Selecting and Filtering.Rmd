@@ -1,0 +1,59 @@
+---
+title: "Selecting and Filtering"
+output: html_document
+---
+```{r}
+if(!file.exists("./data/data.csv")){source(getData.R)}
+ext_tracks <- read.csv("./data/data.csv")
+```
+When cleaning up data, you will need to be able to create subsets of the data, by selecting certain columns or filtering down to certain rows. These actions can be done using the dplyr functionsselect and filter.
+
+The select function subsets certain columns of a data frame. The most basic way to use select is select certain columns by specifying their full column names. For example, to select the storm name, date, time, latitude, longitude, and maximum wind speed from the ext_tracks dataset, you can run:
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+
+ext_tracks %>% select(storm_name, month, day, hour, year, latitude, longitude, max_wind) %>% head()
+```
+
+There are several functions you can use with select that give you more flexibility, and so allow you to select columns without specifying the full names of each column. For example, the starts_withfunction can be used within a select function to pick out all the columns that start with a certain text string. As an example of using starts_with in conjunction with select, in the ext_tracks hurricane data, there are a number of columns that say how far from the storm center winds of certain speeds extend. Tropical storms often have asymmetrical wind fields, so these wind radii are given for each quadrant of the storm (northeast, southeast, northwest, and southeast of the storm’s center). All of the columns with the radius to which winds of 34 knots or more extend start with “radius_34”. To get a dataset with storm names, location, and radii of winds of 34 knots, you could run:
+```{r}
+ext_tracks %>% select(storm_name, latitude, longitude, starts_with("radius_34")) %>% head()
+```
+Other functions that can be used with select in a similar way include:
+
+* ends_with: Select all columns that end with a certain string (for example, select(ext_tracks, ends_with("ne")) to get all the wind radii for the northeast quadrant of a storm for the hurricane example data)
+* contains: Select all columns that include a certain string (select(ext_tracks, contains("34")) to get all wind radii for 34-knot winds)
+* matches: Select all columns that match a certain relative expression (select(ext_tracks, matches("_[0-9][0-9]_")) to get all columns where the column name includes two numbers between two underscores, a pattern that matches all of the wind radii columns)
+
+While select picks out certain columns of the data frame, filter picks out certain rows. Withfilter, you can specify certain conditions using R’s logical operators, and the function will return rows that meet those conditions.
+
+R’s logical operators include:
+
+![](./images/operators.png) 
+
+If you are ever unsure of how to write a logical statement, but know how to write its opposite, you can use the ! operator to negate the whole statement. For example, if you wanted to get all storms exceptthose named “KATRINA” and “ANDREW”, you could use !(storm_name %in% c("KATRINA", "ANDREW")). A common use of this is to identify observations with non-missing data (e.g., !(is.na(radius_34_ne))).
+
+A logical statement, run by itself on a vector, will return a vector of the same length with TRUE every time the condition is met and FALSEevery time it is not.
+```{r}
+head(ext_tracks$hour)
+```
+When you use a logical statement within filter, it will return just the rows where the logical statement is true:
+```{r}
+ext_tracks %>% select(storm_name, hour, max_wind) %>% head(9)
+```
+
+Filtering can also be done after summarizing data. For example, to determine which storms had maximum wind speed equal to or above 160 knots, run:
+```{r}
+ext_tracks %>%
+  group_by(storm_name, year) %>% summarize(worst_wind = max(max_wind)) %>% filter(worst_wind >= 160)
+```
+If you would like to string several logical conditions together and select rows where all or any of the conditions are true, you can use the “and” (&) or “or” (|) operators. For example, to pull out observations for Hurricane Andrew when it was at or above Category 5 strength (137 knots or higher), you could run:
+```{r}
+ext_tracks %>% select(storm_name, month, day, hour, latitude, longitude, max_wind) %>% filter(storm_name == "ANDREW" & max_wind >= 137) 
+```
+Some common errors that come up when using logical operators in R are:
+
+* If you want to check that two things are equal, make sure you use double equal signs (==), not a single one. At best, a single equals sign won’t work; in some cases, it will cause a variable to be re-assigned (=can be used for assignment, just like <-).
+* If you are trying to check if one thing is equal to one of several things, use %in% rather than ==. For example, if you want to filter to rows of ext_trackswith storm names of “KATRINA” and “ANDREW”, you need to use storm_name %in% c(“KATRINA”, “ANDREW”), not storm_name == c(“KATRINA”, “ANDREW”).
+* If you want to identify observations with missing values (or without missing values), you must use theis.na function, not == or !=. For example,is.na(radius_34_ne) will work, but radius_34_ne == NA will not.
+
