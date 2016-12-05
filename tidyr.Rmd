@@ -2,6 +2,7 @@
 title: "tidyr"
 output: html_document
 ---
+See this great [article](https://rpubs.com/bradleyboehmke/data_wrangling):  https://rpubs.com/bradleyboehmke/data_wrangling
 
 The tidyr package includes functions to transfer a data frame between long and wide formats. In the section on tidy data, we showed an example that used gather to convert data into a tidy format. The data is first in an untidy format:
 ```{r}
