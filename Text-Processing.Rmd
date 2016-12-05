@@ -180,7 +180,88 @@ state.name[vowel_state_lgl]
 #Regular Expressions
 
 #RegEx Functions in R
-
+So far we’ve been using grepl() to see if a regex matches a string. There are a few other built in reged functions you should be aware of. First we’ll review our workhorse of this chapter, grepl() which stands for “grep logical.”
+```{r}
+grepl("[Ii]", c("Hawaii", "Illinois", "Kentucky"))
+```
+Then there’s old fashioned grep() which returns the indices of the vector that match the regex:
+```{r}
+grep("[Ii]", c("Hawaii", "Illinois", "Kentucky"))
+```
+The sub() function takes as arguments a regex, a “replacement,” and a vector of strings. This function will replace the first instance of that regex found in each string.
+```{r}
+sub("[Ii]", "1", c("Hawaii", "Illinois", "Kentucky"))
+```
+The gsub() function is nearly the same as sub() except it will replace every instance of the regex that is matched in each string.
+```{r}
+gsub("[Ii]", "1", c("Hawaii", "Illinois", "Kentucky"))
+```
+The strsplit() function will split up strings according to the provided regex. If strsplit() is provided with a vector of strings it will return a list of string vectors.
+```{r}
+two_s <- state.name[grep("ss", state.name)]
+two_s
+   
+strsplit(two_s, "ss")
+```
 #The stringr Package
+The stringr package, written by Hadley Wickham, is part of the Tidyverse group of R packages. This package takes a “data first” approach to functions involving regex, so usually the string is the first argument and the regex is the second argument. The majority of the function names in stringr begin with str_.The str_extract() function returns the sub-string of a string that matches the providied regular expression.
+```{r message=FALSE, warning=FALSE}
+library(stringr)
+
+state_tbl <- paste(state.name, state.area, state.abb)
+head(state_tbl)
+str_extract(state_tbl, "[0-9]+")
+```
+The str_order() function returns a numeric vector that corresponds to the alphabetical order of the strings in the provided vector.
+```{r}
+head(state.name)
+str_order(state.name)
+
+head(state.abb)
+str_order(state.abb)
+```
+The str_pad() function pads strings with other characters which is often useful when the string is going to be eventually printed for a person to read.
+```{r}
+str_pad("Thai", width = 8, side = "left", pad = "-")
+
+str_pad("Thai", width = 8, side = "right", pad = "-")
+
+str_pad("Thai", width = 8, side = "both", pad = "-")
+```
+The str_to_title() function acts just like tolower() andtoupper() except it puts strings into Title Case.
+```{r}
+cases <- c("CAPS", "low", "Title")
+
+str_to_title(cases)
+```
+The str_trim() function deletes whitespace from both sides of a string.
+```{r}
+to_trim <- c("   space", "the    ", "    final frontier  ")
+str_trim(to_trim)
+```
+The str_wrap() function inserts newlines in strings so that when the string is printed each line’s length is limited.
+```{r}
+pasted_states <- paste(state.name[1:20], collapse = " ")
+
+cat(str_wrap(pasted_states, width = 80))
+
+cat(str_wrap(pasted_states, width = 30))
+```
+The word() function allows you to index each word in a string as if it were a vector.
+```{r}
+a_tale <- "It was the best of times it was the worst of times it was the age of wisdom it was the age of foolishness"
+
+word(a_tale, 2)
+
+word(a_tale, end = 3)
+
+word(a_tale, start = 11, end = 15)
+```
+
+See http://regexr.com/, https://github.com/kevinushey/rex, http://tidytextmining.com/index.html
+
+
+
+
 
 
