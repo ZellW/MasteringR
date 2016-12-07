@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+data/pollution.csv
+*.bz2
+data/aqs_sites.xlsx
