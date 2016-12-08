@@ -68,11 +68,13 @@ Q3_1 <-  pollution %>% filter(`Parameter Name` == "Sulfate PM2.5 LC") %>%
         group_by(`Site Num`,`County Code`,`State Code`) %>%
         summarise(avg = mean(`Arithmetic Mean`)) %>%
         arrange(desc(avg))
+Q3_1
 ```
 
 Find the mean concentration for all pollutants over time in one City
 ```{r}
 Q3_2 <- pollution %>% filter(`City Name` == 'Charlotte') %>% summarise(avg = mean(`Arithmetic Mean`))
+Q3_2
 ```
 
 ## Question 4
@@ -142,6 +144,7 @@ Q7 <- joined_tbl %>% group_by(`State Code`, `County Code`, `Site Number`, `Param
      filter(`Location Setting`== "SUBURBAN", `Land Use`=="RESIDENTIAL", 
             `Parameter Name`== "EC PM2.5 LC TOR", Longitude >= -100) %>%
      summarise(avg_concentration = mean(`Arithmetic Mean`))
+Q7
 ```
 
 ## Question 8
@@ -184,6 +187,13 @@ Q10 <- joined_tbl %>% filter(`Parameter Name` %in% c("Total Nitrate PM2.5 LC", "
      group_by(`Site Number`, month = month(`Date Local`), day = day(`Date Local`), `Parameter Name`) %>%
      summarise(avg_value = mean(`Arithmetic Mean`)) %>%
      spread(`Parameter Name`, avg_value)
+
+Q10Function <- function(DF, SiteNumber){
+     a <- filter(Q10, `Site Number` == SiteNumber)
+     x <- a[,4]
+     y <- a[5]
+     return(cor(x,y))
+}
 
 joined_tbl %>% filter(`State Code`==6, `County Code`==65, `Site Number`==8001, 
      `Parameter Name` %in% c("Total Nitrate PM2.5 LC", "Sulfate PM2.5 LC")) %>% 
