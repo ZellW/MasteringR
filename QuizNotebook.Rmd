@@ -1,7 +1,8 @@
 ---
-title: "Mastering R Class 1 Quiz"
-output: html_document
+title: "R Notebook"
+output: html_notebook
 ---
+
 https://github.com/rinckd/math-creativity/blob/0b33fdfb200e7a2524a154e97b9749bd215471c9/quiz_1.R
 https://github.com/SkillSmart/Coursera_SoftwareDevelopment-in-R/blob/2643b77a18b9fa8b05d1043e7e71be5c8debbd51/RProgrammingEnv/Week4/Quiz.Rmd
 https://github.com/yufree/democode/blob/0f307fc61e7b61d99a61ba37082378d008055589/tidyverse/hw.Rmd
@@ -23,11 +24,11 @@ Before staring the quiz you will need to download the data for the quiz, which c
 
 **daily_SPEC_2014.csv.bz2**: a compressed CSV file containing daily measurements of particulate matter chemical constituents in the United States for the year 2014. Note that you should NOT have to decompress this file. The data are measured at a network of federal, state, and local monitors and assembled by the EPA. In this dataset, the **"Arithmetic Mean" column provides the level of the indicated chemical constituent** and the "Parameter.Name" column provides the name of the chemical constituent. The combination of a "State Code", a "County Code", and a "Site Num", uniquely identifies a monitoring site (the location of which is provided by the "Latitude" and "Longitude" columns).
 ```{r loadData1}
-if(!file.exists("../data/pollution.csv")){
+if(!file.exists("./data/pollution.csv")){
 pollution <- read_csv("data/daily_SPEC_2014.csv.bz2")
 write_csv(pollution, "./data/pollution.csv")
 }
-pollution <- read_csv("../data/pollution.csv")
+pollution <- read_csv("./data/pollution.csv")
 ```
 
 **aqs_sites.xlsx**: An excel spreadsheet containing metadata about each of the monitoring sites in the United States where pollution measurements are made. In particular, the "Land Use" and "Location Setting" variables contain information about what kinds of areas the monitors are located in (i.e. “residential” vs. “forest”).
@@ -80,7 +81,7 @@ Q3_2
 ## Question 4
 What is the absolute difference in the average levels of "EC PM2.5 LC TOR" between the states California and Arizona, across all time and all monitoring sites?
 ```{r}
-# Calculating the Pollutatnt Means for California, Arizona
+# Calculating the Pollutant Means for California, Arizona
 Q4 <- pollution %>% filter(`State Name` %in% c("California", "Arizona"), `Parameter Name`=="EC PM2.5 LC TOR") %>% 
   group_by(`State Name`) %>% 
   summarise(avg_concentration = mean(`Arithmetic Mean`))
@@ -93,7 +94,7 @@ Q4
 ## Question 5
 What is the median level of "OC PM2.5 LC TOR" in the western United States, across all time? Define western as any monitoring location that has a Longitude LESS THAN -100.
 ```{r}
-Q5 <- pollution %>% filter(Longitude < -100, `Parameter Name` == "OC PM2.5 LC TOR" ) %>% 
+Q5 <- pollution %>% filter(Longitude < -100, `Parameter Name` == "OC PM2.5 LC TOR") %>% 
   summarise(med_level = median(`Arithmetic Mean`))
 Q5
 ```
@@ -125,7 +126,7 @@ Need to change a few variables in the pollution data
 ```{r}
 pollution$`State Code` <- as.numeric(pollution$`State Code`)
 pollution$`County Code` <- as.numeric(pollution$`County Code`)
-pollution$`Site Num` <- as.numeric(pollution$`Site Num`)
+pollution$`Site Num` <- as.numeric(pollution$`Site Num`)#Need to make the columns the same?  I think so.  Check if ans is wrong
 ```
 Now you can join the two DFs on (State, County, SiteId)
 ```{r}
@@ -192,7 +193,15 @@ Q10Function <- function(DF, SiteNumber){
      a <- filter(Q10, `Site Number` == SiteNumber)
      x <- a[,4]
      y <- a[5]
-     return(cor(x,y))
+     tmpDF <- cor(x,y)
+     return(tmpDF)
+}
+
+numSites <- as.data.frame(Q10) %>% select(`Site Number`) %>% distinct()
+ansDF <- data.frame()
+for(i in 1:nrow(numSites)){
+     tmpDF <- Q10Function(Q10, numSites[i,1])
+     ansDF <- rbind(ansDF, tmpDF)
 }
 
 joined_tbl %>% filter(`State Code`==6, `County Code`==65, `Site Number`==8001, 
@@ -203,4 +212,5 @@ joined_tbl %>% filter(`State Code`==6, `County Code`==65, `Site Number`==8001,
   
 summarise(correlation = cor(x=`Total Nitrate PM2.5 LC`, y=`Sulfate PM2.5 LC`, use="pairwise.complete.obs"))
 ```
+
 
