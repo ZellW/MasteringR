@@ -27,7 +27,7 @@ if(!file.exists("./data/pollution.csv")){
 pollution <- read_csv("data/daily_SPEC_2014.csv.bz2")
 write_csv(pollution, "./data/pollution.csv")
 }
-pollution <- read_csv("./data/pollution.csv"")
+pollution <- read_csv("./data/pollution.csv")
 ```
 
 **aqs_sites.xlsx**: An excel spreadsheet containing metadata about each of the monitoring sites in the United States where pollution measurements are made. In particular, the "Land Use" and "Location Setting" variables contain information about what kinds of areas the monitors are located in (i.e. “residential” vs. “forest”).
@@ -43,7 +43,7 @@ For all of the questions below, you can ignore the missing values in the dataset
 **What is average Sample.Value for "Bromine PM2.5 LC" in the state of Wisconsin in this dataset?**
 ```{r}
 Q1 <- pollution %>% filter(`Parameter Name`== "Bromine PM2.5 LC", `State Name` == "Wisconsin")
-Q1 <- pollution %>% summarise(avg = mean(`Arithmetic Mean`, na.rm=TRUE))
+Q1 <- Q1 %>% summarise(avg = mean(`Arithmetic Mean`, na.rm=TRUE))
 Q1
 ```
 
@@ -126,6 +126,9 @@ Need to change a few variables in the pollution data
 pollution$`State Code` <- as.numeric(pollution$`State Code`)
 pollution$`County Code` <- as.numeric(pollution$`County Code`)
 pollution$`Site Num` <- as.numeric(pollution$`Site Num`)
+names(pollution)[names(pollution)=="Site Num"] <- "Site Number"
+
+sites$`State Code` <- as.numeric(sites$`State Code`)
 ```
 Now you can join the two DFs on (State, County, SiteId)
 ```{r}
@@ -144,7 +147,7 @@ Q7 <- joined_tbl %>% group_by(`State Code`, `County Code`, `Site Number`, `Param
      filter(`Location Setting`== "SUBURBAN", `Land Use`=="RESIDENTIAL", 
             `Parameter Name`== "EC PM2.5 LC TOR", Longitude >= -100) %>%
      summarise(avg_concentration = mean(`Arithmetic Mean`))
-Q7
+Q7#Right answer 0.61
 ```
 
 ## Question 8
