@@ -1,0 +1,24 @@
+> ##Comparison for n=10
+> microbenchmark(RegularLoop <- Factorial_loop(10),
++                Reduce <- Factorial_reduce(10),
++                Recursion <- Factorial_func(10),
++                Memoization <- Factorial_mem(10))
+Unit: microseconds
+                              expr    min      lq     mean  median     uq     max neval
+ RegularLoop <- Factorial_loop(10)  9.846 10.6670 12.71000 11.0770 11.898  40.205   100
+    Reduce <- Factorial_reduce(10) 25.026 27.0770 32.99305 28.7185 34.872 112.411   100
+   Recursion <- Factorial_func(10) 58.667 65.2310 73.98582 70.5640 75.898 164.923   100
+  Memoization <- Factorial_mem(10)  4.923  5.7435  7.34794  6.1540  6.975  54.154   100
+
+
+> ##Comparison for n=100
+> microbenchmark(RegularLoop <- Factorial_loop(100),
++                Reduce <- Factorial_reduce(100),
++                Recursion <- Factorial_func(100),
++                Memoization <- Factorial_mem(100))
+Unit: microseconds
+                               expr     min      lq      mean  median       uq      max neval
+ RegularLoop <- Factorial_loop(100)  38.974  40.615  48.82072  42.257  50.6670   83.282   100
+    Reduce <- Factorial_reduce(100) 155.487 164.718 181.89138 175.590 196.9230  240.821   100
+   Recursion <- Factorial_func(100) 712.205 748.923 802.31756 763.897 793.8455 2188.306   100
+  Memoization <- Factorial_mem(100)   4.923   5.744   7.29054   6.564   7.3850   28.308   100
