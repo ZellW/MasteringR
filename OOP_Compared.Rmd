@@ -1,0 +1,180 @@
+---
+title: "Comparison of Method Behaviour of S3, S4, and Reference Classes"
+output: html_document
+---
+
+Unlike S3 and S4, Reference Class objects are stuck with the method code they were born with - except when they aren't.
+
+##S3 Classes
+
+First let's create a new S3 class object:
+```{r}
+foo3 = "I am an S3 object"
+class(foo3) = "S3Foo"
+```
+
+Methods for S3 objects are always the current definition of the specific method function. Starting from a non-existent generic, I create a generic and a method for S3Foo, and the method works on the foo3 object I created above:
+```{r eval=FALSE}
+bar3(foo3)  #non-existent
+```
+Error: could not find function "bar3"
+
+###generic:
+```{r}
+bar3 = function(z) {
+    UseMethod("bar3")
+}
+bar3.S3Foo = function(z) {
+    message("First bar3 method for ", z)
+}
+bar3(foo3)
+```
+
+Changing the specific method function changes the behaviour when called on the existing object:
+```{r}
+bar3.S3Foo = function(z) {
+    message("Updated bar3 method for ", z)
+}
+bar3(foo3)
+```
+we get the 'updated' version of the message.
+
+##S4 Classes
+
+Now for S4 objects.
+```{r}
+S4Foo = setClass("S4Foo", representation = list(title = "character"))
+foo4 = S4Foo(title = "My name is foo4")
+```
+
+Create a generic and specific method for S4 objects thus:
+```{r}
+setGeneric("bar4", function(z) {
+})
+```
+```{r}
+setMethod("bar4", "S4Foo", function(z) {
+    message("First bar4 method for ", z@title)
+})
+```
+
+```{r}
+bar4(foo4)
+```
+
+Now if I change the specific method, what happens?
+```{r}
+setMethod("bar4", "S4Foo", function(z) {
+    message("Updated bar4 method for ", z@title)
+})
+```
+```{r}
+bar4(foo4)
+```
+As with S3, we get the updated method.
+
+##Reference Classes
+
+We create a new reference class generator and create a new object:
+```{r}
+R5Foo = setRefClass("R5Foo", "title")
+foo5 = R5Foo$new(title = "A Reference class")
+```
+
+Let's create a new method:
+```{r}
+R5Foo$methods(bar5 = function() {
+    message("First bar5 method for ", title)
+})
+foo5$bar5()
+```
+
+So now if we update the method what happens?
+```{r}
+R5Foo$methods(bar5 = function() {
+    message("Updated bar5 method ", title)
+})
+foo5$bar5()
+
+```
+In this case, the method does not change. We do not get the updated method. Let's see what happens if we create a new object.
+```{r}
+foo5b = R5Foo$new(title = "A newer Ref Class Object")
+foo5b$bar5()
+```
+```{r}
+foo5$bar5()
+```
+
+It seems that objects get the methods as they were in the generator when they were created. Except that when we created foo5 the bar5 method didn't exist. That was added afterwards.
+
+Existing Reference Class objects get new methods defined on the class generator, but not changed methods. At what point do they get the new method though? When it's first defined on the generator, or when it first calls it? Let's see.
+```{r}
+R5Foo$methods(baz = function() {
+    message("First baz defn")
+})
+R5Foo$methods(baz = function() {
+    message("Second baz defn")
+})
+foo5$baz()
+```
+It seems to be when the object first calls the method. I suspect the method dispatch code only copies function definitions to the object from the class specification on first use. But at that point it is then fixed.
+
+Let's just check that by redefining the method again.
+```{r}
+R5Foo$methods(baz = function() {
+    message("Third baz defn")
+})
+foo5$baz()
+```
+yes, it still gets the second definition.
+
+Can we remove it by NULLing it and redefining it?
+```{r}
+R5Foo$methods(baz = NULL)
+```
+now create4 an object and see if it has a baz method:
+```{r eval=FALSE}
+foo5b = R5Foo$new(title = "Another new one")
+foo5b$baz()
+```
+Error: "baz" is not a valid field or method name for reference class
+"R5Foo"
+
+does my old object have a baz method?
+```{r}
+foo5$baz()
+```
+create a new baz method, see what these objects get:
+```{r}
+R5Foo$methods(baz = function() {
+    message("Fourth baz defn")
+})
+foo5$baz()
+```
+```{r}
+foo5b$baz()
+```
+No. The new object, foo5b, doesn't initially have a baz method (because at creation time it was NULLed out), but the existing one has kept its original value. The foo5b object eventually gets the new fourth definition, foo5 is stuck with its original definition.
+
+Note that you can't work round this by defining the method as calling a function, and then changing the function definition.
+```{r}
+hi = function() {
+    message("Hi!")
+}
+R5Foo$methods(sayhello = hi)
+foo5$sayhello()
+```
+```{r}
+hi = function() {
+    message("HiHi!")
+}
+foo5$sayhello()
+```
+Despite changing the definition of hi, it still calls the original one.
+
+What all this means is that if I change my Reference Class methods, all my existing objects of that class do not see that change. This is in contrast to S3 and S4 classes, where changes to methods are reflected in method calls on existing objects.
+
+##Conclusion
+
+I'm not going to state if either of these behaviours are righter or wronger than the other, because I think that as long as you know, then it doesn't matter. One advantage of the S3 and S4 paradigm is that you can quickly update method code and see how it works on existing objects. The advantage of the Reference Class paradigm is that existing objects have the code they were essentially born with and so that code should be the code that works with their internals, and you don't end up having objects with structures that don't work with updated methods. 
